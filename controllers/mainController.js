@@ -21,8 +21,8 @@ router.get('/watchlist', async (req, res) => {
 router.put('/addtowatchlist', async (req, res) => {
     try {
         const filter = { username: req.session.currentUser.username };
-        const updatedUser = { movies: [req.body] };
-        await User.findOneAndUpdate(filter, updatedUser, { new: true });
+        const updatedUser = { $push: { movies: [req.body] } };
+        res.json(await User.findOneAndUpdate(filter, updatedUser, { new: true }));
     } catch (err) {
         console.log(err);
         res.status(400).json(err);
