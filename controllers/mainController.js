@@ -22,12 +22,24 @@ router.get('/watchlist', async (req, res) => {
 
 });
 
+// add movie to current user watchlist
 router.put('/addtowatchlist', async (req, res) => {
     try {
         const filter = { username: req.session.currentUser.username };
         const updatedUser = { $push: { movies: [req.body] } };
         res.json(await User.findOneAndUpdate(filter, updatedUser, { new: true }));
-        res.send('Logged out.');
+    } catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
+});
+
+// remove movie from watchlist
+router.put('/removefromwatchlist', async (req, res) => {
+    try {
+        const movieToRemove = await req.body;
+        res.json(await User.updateOne({ username: req.session.currentUser.username }, { $pullAll: { movies: [movieToRemove] } }));
+
     } catch (err) {
         console.log(err);
         res.status(400).json(err);
