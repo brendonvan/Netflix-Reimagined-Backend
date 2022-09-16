@@ -1,23 +1,15 @@
-require("dotenv").config();
-//require('./config/db.connection');
-
 const express = require("express");
-const cors = require("cors");
-const morgan = require("morgan");
+const { User } = require("../models");
+const router = express.Router();
 
-const PORT = 4000;
-const mainController = require('./controllers/mainController');
+const { User } = require("../models");
 
-const app = express();
+router.get('/', (req, res) => {
+    res.send("Hello Netflicks movie")
+})
 
-app.use(express.json());
-app.use(cors());
-app.use(morgan("dev"));
+router.get('/watchlistids', (req, res) => {
+    res.send("watchlistids page");
+})
 
-app.use('/movie', mainController);
-
-app.get("/", (req, res) => {
-    res.send("Hello Netflicks");
-});
-
-app.listen(PORT, () => console.log(`listening on PORT ${PORT}`));
+module.exports = router;
