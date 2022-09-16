@@ -9,11 +9,14 @@ router.get('/', (req, res) => {
 // get current user watchlist
 router.get('/watchlist', async (req, res) => {
     try {
-        const watchlist = await User.find({ username: req.session.currentUser.username }, 'movies').populate('movies');
-        res.json(watchlist)
+        if (req.session.currentUser) {
+            const watchlist = await User.find({ username: req.session.currentUser.username }, 'movies').populate('movies');
+            res.json(watchlist)
+        } else {
+            res.status(400).json("Not logged in");
+        }
     } catch (err) {
         console.log(err);
-        res.send('Not currently logged in');
         res.status(400).json(err);
     }
 
