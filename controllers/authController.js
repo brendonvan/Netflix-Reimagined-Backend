@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const { User } = require("../models");
-const { send } = require("process");
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: false }));
