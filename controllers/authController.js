@@ -8,7 +8,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: false }));
 
 // login
-router.post('/login', async function (req, res, next) {
+router.post('/login', async (req, res, next) => {
 
     try {
         const foundUser = await User.findOne({ username: req.body.username });
