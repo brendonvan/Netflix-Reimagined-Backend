@@ -18,7 +18,7 @@ router.post('/login', async (req, res, next) => {
         const foundUser = await User.findOne({ username: req.body.username });
 
         if (!foundUser) {
-            return res.redirect('/home');
+            res.send("user not found");
         } else {
             const match = await bcrypt.compare(req.body.password, foundUser.password);
             if (!match) return res.send("invalid password");
@@ -26,6 +26,7 @@ router.post('/login', async (req, res, next) => {
                 id: foundUser._id,
                 username: foundUser.username
             };
+            res.send("logged in");
         }
     } catch (err) {
         console.log(err);

@@ -6,8 +6,27 @@ router.get('/', (req, res) => {
     res.send("Hello Netflicks movie")
 })
 
-router.get('/watchlistids', (req, res) => {
-    res.send("watchlistids page");
+// get current user watchlist
+router.get('/watchlist', async (req, res) => {
+    try {
+        const watchlist = User.find({ username: req.session.currentUser.username }, 'movies').populate('movies');
+        res.json(watchlist)
+    } catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
+
+});
+
+router.put('/addtowatchlist', async (req, res) => {
+    try {
+        const filter = { username: req.session.currentUser.username };
+        const updatedUser = { movies: [req.body] };
+        await User.findOneAndUpdate(filter, updatedUser, { new: true });
+    } catch (err) {
+        console.log(err);
+        res.status(400).json(err);
+    }
 })
 
 module.exports = router;
