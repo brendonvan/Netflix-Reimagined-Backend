@@ -1,5 +1,3 @@
-require("dotenv").config();
-//require('./config/db.connection');
 
 const express = require("express");
 const cors = require("cors");
@@ -7,8 +5,12 @@ const morgan = require("morgan");
 const methodOverride = require('method-override');
 const session = require('express-session');
 const MongoStore = require("connect-mongo");
+const cookieParser = require("cookie-parser");
 
-const PORT = 4000;
+require("dotenv").config();
+require('./config/db.connection.js');
+
+const PORT = process.env.PORT;
 const mainController = require('./controllers/mainController');
 const authController = require('./controllers/authController')
 
@@ -17,16 +19,18 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
+app.use(methodOverride('_method'));
+app.use(cookieParser());
 
-app.use(session)({
+app.use(session({
     store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
     secret: '258369147',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7 * 2
+        maxAge: 1000 * 60 * 60 * 24 * 7 * 2,
     }
-})
+}));
 
 app.use('/movie', mainController);
 app.use('/auth', authController);

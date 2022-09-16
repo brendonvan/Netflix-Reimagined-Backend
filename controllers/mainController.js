@@ -2,8 +2,6 @@ const express = require("express");
 const { User } = require("../models");
 const router = express.Router();
 
-const { User } = require("../models");
-
 router.get('/', (req, res) => {
     res.send("Hello Netflicks movie")
 })

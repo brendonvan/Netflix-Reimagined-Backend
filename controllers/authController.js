@@ -2,9 +2,14 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const { User } = require("../models");
+require('dotenv').config();
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: false }));
+
+router.get('/register', (req, res, next) => {
+    res.send("Register Page");
+})
 
 // login
 router.post('/login', async (req, res, next) => {
@@ -30,7 +35,7 @@ router.post('/login', async (req, res, next) => {
 });
 
 // register
-router.post("/register", async (res, res) => {
+router.post("/register", async (req, res, next) => {
     try {
         const foundUser = await User.exists({ username: req.body.username });
         if (foundUser) {

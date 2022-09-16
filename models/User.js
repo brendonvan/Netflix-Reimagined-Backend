@@ -6,6 +6,6 @@ const UserSchema = new mongoose.Schema({
     movies: [{ type: mongoose.Types.ObjectId, ref: 'Movie' }] //movies saved in users watchlist
 }, { timestamps: true });
 
-const User = mongoose.model("People", UserSchema);
+const User = mongoose.model("User", UserSchema);
 
 module.exports = User;
