@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const { User } = require("../models");
+const { User, Watchlist } = require("../models");
 const { createUserToken } = require("../middleware/auth");
 const { isErrored } = require("stream");
 require('dotenv').config();
@@ -11,6 +11,17 @@ router.use(express.urlencoded({ extended: false }));
 
 router.get('/register', (req, res, next) => {
     res.send("Register Page");
+})
+
+router.post('/watchlist', async (req, res, next) => {
+    try {
+        console.log('I got hit');
+        const foundWatchlist = await Watchlist.findOne({ username: req.body.id })
+        res.status(200).json(foundWatchlist);
+    } catch (err) {
+        res.status(400).json({ err: err.message });
+        next();
+    }
 })
 
 // login
@@ -31,6 +42,8 @@ router.post('/login', async (req, res, next) => {
 
 });
 
+// create router to fetch user data res.send(currentUser)
+
 // register
 router.post('/register', async (req, res, next) => {
     try {
@@ -41,6 +54,14 @@ router.post('/register', async (req, res, next) => {
         req.body.password = hash;
 
         const newUser = await User.create(req.body);
+        console.log(req.body)
+        // TODO: CREATE WATCHLIST AND ADD TO USER MODEL
+        const newWatchlist = await Watchlist.create({
+            username: newUser._id,
+            movies: []
+        });
+
+
         if (newUser) {
             req.body.password = pwStore;
             const authenticatedUserToken = createUserToken(req, newUser);
@@ -57,5 +78,16 @@ router.post('/register', async (req, res, next) => {
         next();
     }
 });
+
+router.put('/addWatchlist', async (req, res) => {
+    try {
+        const filter = { username: req.user._id };
+        const updatedUser = { $push: { movies: [req.body] } };
+        res.json(await User.findOneAndUpdate(filter, updatedUser, { new: true }));
+    } catch (err) {
+        res.status(400).json({ error: "Something went wrong" });
+        next();
+    }
+})
 
 module.exports = router;
