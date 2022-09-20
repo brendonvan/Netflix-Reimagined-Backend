@@ -1,5 +1,6 @@
 const express = require("express");
 const { User } = require("../models");
+const { handleValidateOwnership, requireToken } = require("../middleware/auth")
 const router = express.Router();
 
 router.get('/', (req, res) => {
@@ -23,9 +24,10 @@ router.get('/watchlist', async (req, res) => {
 });
 
 // add movie to current user watchlist
-router.put('/addtowatchlist', async (req, res) => {
+router.put('/addtowatchlist', requireToken, async (req, res) => {
     try {
-        const filter = { username: req.session.currentUser.username };
+        handleValidateOwnership(req, await User.findById(req.user._id))
+        const filter = { username: req.user._id };
         const updatedUser = { $push: { movies: [req.body] } };
         res.json(await User.findOneAndUpdate(filter, updatedUser, { new: true }));
     } catch (err) {
@@ -45,5 +47,20 @@ router.put('/removefromwatchlist', async (req, res) => {
         res.status(400).json(err);
     }
 })
+
+// logout
+router.get("/logout", requireToken, async (req, res) => {
+    try {
+        const currentUser = req.user.username
+        res.status(200).json({
+            message: `${req.user.username} currently logged out`,
+            isLoggedIn: false,
+            token: "",
+        });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
 
 module.exports = router;
