@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const { User, Watchlist } = require("../models");
+const { User, Watchlist, Movie } = require("../models");
 const { createUserToken } = require("../middleware/auth");
 const { isErrored } = require("stream");
 require('dotenv').config();
@@ -54,13 +54,17 @@ router.post('/register', async (req, res, next) => {
         req.body.password = hash;
 
         const newUser = await User.create(req.body);
-        console.log(req.body)
+        // console.log(req.body)
         // TODO: CREATE WATCHLIST AND ADD TO USER MODEL
         const newWatchlist = await Watchlist.create({
             username: newUser._id,
             movies: []
         });
+        
+        req.body.watchlist = newWatchlist._id;
 
+        console.log(req.body)
+        await User.findByIdAndUpdate(newUser._id, req.body, { new: true })
 
         if (newUser) {
             req.body.password = pwStore;
@@ -79,11 +83,21 @@ router.post('/register', async (req, res, next) => {
     }
 });
 
-router.put('/addWatchlist', async (req, res) => {
+router.put('/addToWatchlist', async (req, res, next) => {
     try {
-        const filter = { username: req.user._id };
-        const updatedUser = { $push: { movies: [req.body] } };
-        res.json(await User.findOneAndUpdate(filter, updatedUser, { new: true }));
+        const foundMovie = await Movie.exists({ movieId: req.body.movie.movieId})
+        if (!foundMovie){
+            const createdMovie = await Movie.create(req.body.movie);
+            await Watchlist.findOneAndUpdate({ username: req.body.id}, { $push: { movies: createdMovie._id } }, { new: true } )
+
+        } else {
+            const movie = await Movie.findOne({movieId: req.body.movie.movieId});
+            let movieExistInWatchlist = await Watchlist.exists({ $and: [ { username: req.body.id }, { movies: movie._id } ] })
+            console.log(movieExistInWatchlist);
+            if (!movieExistInWatchlist) {
+                await Watchlist.findOneAndUpdate({ username: req.body.id}, { $push: { movies: movie._id } }, { new: true } );
+            } 
+        }
     } catch (err) {
         res.status(400).json({ error: "Something went wrong" });
         next();

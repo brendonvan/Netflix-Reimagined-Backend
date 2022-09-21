@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
     username: { type: String, unique: [true, 'Username already taken'], required: [true, 'Please enter a username'] },
     password: { type: String, required: [true, 'You must enter a password'] },
-    Watchlist: { type: mongoose.Types.ObjectId, ref: 'Watchlist' }
+    watchlist: { type: mongoose.Types.ObjectId, ref: 'Watchlist' }
 }, {
     timestamps: true, toJSON: {
         transform: (_doc, ret) => {
