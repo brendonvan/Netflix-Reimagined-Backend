@@ -49,11 +49,13 @@ router.put('/removefromwatchlist', async (req, res) => {
 })
 
 // logout
-router.get("/logout", requireToken, async (req, res) => {
+router.post("/logout", async (req, res) => {
     try {
-        const currentUser = req.user.username
+        const currentUser = await req.body.data
+        console.log(currentUser)
+
         res.status(200).json({
-            message: `${req.user.username} currently logged out`,
+            message: `${req.body.data} currently logged out`,
             isLoggedIn: false,
             token: "",
         });

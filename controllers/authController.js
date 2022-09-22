@@ -1,18 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const mongoose = require('mongoose');
 const { User, Watchlist, Movie } = require("../models");
 const { createUserToken } = require("../middleware/auth");
-const { isErrored } = require("stream");
 require('dotenv').config();
 
 router.use(express.json());
 router.use(express.urlencoded({ extended: false }));
 
+// check if movie is currently in watchlist
 router.post('/checkWatchlist', async (req, res, next) => {
     try {
-        
+
         const movie = await Movie.findOne({movieId: req.body.movieId});
         // console.log('Check watchlist HIT')
         // console.log('MovieID: ' + req.body.movieId, ' UserID ' + req.body.userId)
@@ -23,18 +22,20 @@ router.post('/checkWatchlist', async (req, res, next) => {
         const inWatchList = await Watchlist.exists({$and: [{ username: req.body.userId }, { movies: movie._id }]})
         // console.log('Check watchlist HIT after exist');
         // console.log(inWatchList);
+
         if (inWatchList) {
-             res.status(200).json(true);
+            res.status(200).json(true);
         } else {
-             res.status(200).json(false);
+            res.status(200).json(false);
         }
 
-        
-    } catch(err) {
-        res.status(400).json({err: err.message});
+
+    } catch (err) {
+        res.status(400).json({ err: err.message });
     }
 })
 
+// get user watchlist
 router.post('/watchlist', async (req, res, next) => {
     try {
 
@@ -64,8 +65,6 @@ router.post('/login', async (req, res, next) => {
 
 });
 
-// create router to fetch user data res.send(currentUser)
-
 // register
 router.post('/register', async (req, res, next) => {
     try {
@@ -80,7 +79,7 @@ router.post('/register', async (req, res, next) => {
             username: newUser._id,
             movies: []
         });
-        
+
         req.body.watchlist = newWatchlist._id;
 
 
@@ -103,18 +102,19 @@ router.post('/register', async (req, res, next) => {
     }
 });
 
+// add to watchlist, checks if movie is in our database, if not it adds it to the database and then adds the movie to the watchlist
 router.put('/addToWatchlist', async (req, res, next) => {
     try {
         console.log('ROUTE HIT')
         const foundMovie = await Movie.exists({ movieId: req.body.movie.movieId})
         if (!foundMovie){
             const createdMovie = await Movie.create(req.body.movie);
-            await Watchlist.findOneAndUpdate({ username: req.body.id}, { $push: { movies: createdMovie._id } }, { new: true } );
+            await Watchlist.findOneAndUpdate({ username: req.body.id }, { $push: { movies: createdMovie._id } }, { new: true });
             res.status(200);
         } else {
-            const movie = await Movie.findOne({movieId: req.body.movie.movieId});
-            let movieExistInWatchlist = await Watchlist.exists({ $and: [ { username: req.body.id }, { movies: movie._id } ] });
-            
+            const movie = await Movie.findOne({ movieId: req.body.movie.movieId });
+            let movieExistInWatchlist = await Watchlist.exists({ $and: [{ username: req.body.id }, { movies: movie._id }] });
+
             //console.log(movieExistInWatchlist);
             if (!movieExistInWatchlist) {
                 await Watchlist.findOneAndUpdate({ username: req.body.id}, { $push: { movies: movie._id } }, { new: true } );
@@ -152,6 +152,20 @@ router.put('/removeFromWatchlist', async (req, res, next) => {
         }
     } catch (err) {
         res.status(400).json({ error: "Something went wrong" });
+        next();
+    }
+})
+
+// delete user account and their watchlist from database
+router.delete('/deleteAccount', async (req, res, next) => {
+    try {
+        await User.findByIdAndDelete(req.body.id);
+        await Watchlist.findOneAndDelete({ username: req.body.id });
+        res.status(200);
+        res.send("Deleted");
+    } catch (err) {
+        console.log(err);
+        res.status(400).json(err);
         next();
     }
 })

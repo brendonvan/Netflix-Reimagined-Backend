@@ -21,17 +21,6 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(methodOverride('_method'));
 app.use(cookieParser());
-
-app.use(session({
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-    secret: '258369147',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7 * 2,
-    }
-}));
-
 app.use('/movie', mainController);
 app.use('/auth', authController);
 
