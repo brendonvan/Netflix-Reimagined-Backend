@@ -11,8 +11,17 @@ router.use(express.urlencoded({ extended: false }));
 // check if movie is currently in watchlist
 router.post('/checkWatchlist', async (req, res, next) => {
     try {
-        const movie = await Movie.findOne({ movieId: req.body.movieId });
-        const inWatchList = await Watchlist.exists({ $and: [{ username: req.body.userId }, { movies: movie._id }] })
+
+        const movie = await Movie.findOne({movieId: req.body.movieId});
+        // console.log('Check watchlist HIT')
+        // console.log('MovieID: ' + req.body.movieId, ' UserID ' + req.body.userId)
+        if (!req.body.userId) {
+            console.log('NO USER')
+        }
+        console.log('Check watchlist HIT before exist')
+        const inWatchList = await Watchlist.exists({$and: [{ username: req.body.userId }, { movies: movie._id }]})
+        // console.log('Check watchlist HIT after exist');
+        // console.log(inWatchList);
 
         if (inWatchList) {
             res.status(200).json(true);
@@ -96,8 +105,9 @@ router.post('/register', async (req, res, next) => {
 // add to watchlist, checks if movie is in our database, if not it adds it to the database and then adds the movie to the watchlist
 router.put('/addToWatchlist', async (req, res, next) => {
     try {
-        const foundMovie = await Movie.exists({ movieId: req.body.movie.movieId })
-        if (!foundMovie) {
+        console.log('ROUTE HIT')
+        const foundMovie = await Movie.exists({ movieId: req.body.movie.movieId})
+        if (!foundMovie){
             const createdMovie = await Movie.create(req.body.movie);
             await Watchlist.findOneAndUpdate({ username: req.body.id }, { $push: { movies: createdMovie._id } }, { new: true });
             res.status(200);
@@ -107,9 +117,38 @@ router.put('/addToWatchlist', async (req, res, next) => {
 
             //console.log(movieExistInWatchlist);
             if (!movieExistInWatchlist) {
-                await Watchlist.findOneAndUpdate({ username: req.body.id }, { $push: { movies: movie._id } }, { new: true });
-                res.status(200);
-            }
+                await Watchlist.findOneAndUpdate({ username: req.body.id}, { $push: { movies: movie._id } }, { new: true } );
+                console.log('Movie Does not exist')
+                
+            } 
+            console.log('Here at the end')
+            res.status(200).json({ message: 'Working' });
+        }
+    } catch (err) {
+        res.status(400).json({ error: "Something went wrong" });
+        next();
+    }
+})
+
+router.put('/removeFromWatchlist', async (req, res, next) => {
+    try {
+        console.log('ROUTE HIT REMOVE')
+        const foundMovie = await Movie.exists({ movieId: req.body.movie.movieId})
+        console.log(foundMovie)
+        if (foundMovie){
+            const movie = await Movie.findOne({movieId: req.body.movie.movieId});
+            
+            let movieExistInWatchlist = await Watchlist.exists({ $and: [ { username: req.body.id }, { movies: movie._id } ] });
+            
+            //console.log(movieExistInWatchlist);
+            if (movieExistInWatchlist) {
+                await Watchlist.findOneAndUpdate({ username: req.body.id}, { $pull: { movies: movie._id } } );
+                console.log('Movie was removed')
+                res.status(200).json({ message: 'Working' });
+            } 
+            
+        } else {
+            console.log("Can't remove a movie that isn't in the watchlist")
         }
     } catch (err) {
         res.status(400).json({ error: "Something went wrong" });
